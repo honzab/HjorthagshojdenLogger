@@ -18,7 +18,7 @@ import time
 from datetime import datetime
 from pathlib import Path
 
-from ew1_reader import EW1Reader, RegisterDefinition, load_registers_from_config
+from ew1_reader import EW1Reader, RegisterDefinition
 from write_to_sheets import SheetsWriter
 
 
@@ -35,7 +35,7 @@ def signal_handler(signum, frame):
 
 def load_config(config_path: str) -> dict:
     """Load configuration from JSON file."""
-    with open(config_path, 'r') as f:
+    with open(config_path, "r") as f:
         return json.load(f)
 
 
@@ -46,22 +46,24 @@ def create_reader_from_config(config: dict) -> EW1Reader:
     # Build register definitions
     registers = []
     for reg_config in config.get("registers", []):
-        registers.append(RegisterDefinition(
-            address=reg_config["address"],
-            name=reg_config["name"],
-            description=reg_config.get("description", ""),
-            register_type=reg_config.get("register_type", "holding"),
-            count=reg_config.get("count", 1),
-            data_type=reg_config.get("data_type", "uint16"),
-            scale=reg_config.get("scale", 1.0),
-            unit=reg_config.get("unit", "")
-        ))
+        registers.append(
+            RegisterDefinition(
+                address=reg_config["address"],
+                name=reg_config["name"],
+                description=reg_config.get("description", ""),
+                register_type=reg_config.get("register_type", "holding"),
+                count=reg_config.get("count", 1),
+                data_type=reg_config.get("data_type", "uint16"),
+                scale=reg_config.get("scale", 1.0),
+                unit=reg_config.get("unit", ""),
+            )
+        )
 
     return EW1Reader(
         host=ew1_config.get("host", "192.168.1.100"),
         port=ew1_config.get("port", 502),
         unit_id=ew1_config.get("unit_id", 1),
-        registers=registers
+        registers=registers,
     )
 
 
@@ -119,28 +121,28 @@ Examples:
   %(prog)s --interval 300            # Log every 5 minutes
   %(prog)s --config my_config.json   # Use custom configuration
   %(prog)s --dry-run                 # Test EW-1 connection only
-        """
+        """,
     )
     parser.add_argument(
         "--config",
         default="registers.json",
-        help="Path to configuration file (default: registers.json)"
+        help="Path to configuration file (default: registers.json)",
     )
     parser.add_argument(
         "--interval",
         type=int,
         default=0,
-        help="Logging interval in seconds (0 = run once, default: 0)"
+        help="Logging interval in seconds (0 = run once, default: 0)",
     )
     parser.add_argument(
         "--dry-run",
         action="store_true",
-        help="Only read from EW-1, don't write to Sheets"
+        help="Only read from EW-1, don't write to Sheets",
     )
     parser.add_argument(
         "--setup-header",
         action="store_true",
-        help="Set up the header row in Google Sheets before logging"
+        help="Set up the header row in Google Sheets before logging",
     )
 
     args = parser.parse_args()

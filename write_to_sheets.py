@@ -21,7 +21,7 @@ class SheetsWriter:
     def __init__(
         self,
         spreadsheet_url: str = SPREADSHEET_URL,
-        service_account_file: str = SERVICE_ACCOUNT_FILE
+        service_account_file: str = SERVICE_ACCOUNT_FILE,
     ):
         """
         Initialize the Sheets writer.
@@ -38,8 +38,8 @@ class SheetsWriter:
     def connect(self):
         """Connect to Google Sheets API."""
         scope = [
-            'https://spreadsheets.google.com/feeds',
-            'https://www.googleapis.com/auth/drive'
+            "https://spreadsheets.google.com/feeds",
+            "https://www.googleapis.com/auth/drive",
         ]
 
         # Resolve path relative to this script's directory
@@ -47,8 +47,7 @@ class SheetsWriter:
         service_file = script_dir / self.service_account_file
 
         credentials = ServiceAccountCredentials.from_json_keyfile_name(
-            str(service_file),
-            scope
+            str(service_file), scope
         )
         self._client = gspread.authorize(credentials)
         self._spreadsheet = self._client.open_by_url(self.spreadsheet_url)
@@ -80,14 +79,14 @@ class SheetsWriter:
 
         if existing_header != expected_header:
             # Update header row
-            sheet.update('A1', [expected_header])
+            sheet.update("A1", [expected_header])
             print(f"Header row updated: {expected_header}")
 
     def write_row(
         self,
         data: dict[str, Optional[float]],
         sheet_name: Optional[str] = None,
-        columns: Optional[list[str]] = None
+        columns: Optional[list[str]] = None,
     ) -> int:
         """
         Write a row of data with timestamp to the spreadsheet.
@@ -130,7 +129,7 @@ class SheetsWriter:
         next_row = len(values) + 1
 
         # Write the row
-        sheet.update(f'A{next_row}', [row])
+        sheet.update(f"A{next_row}", [row])
 
         return next_row
 

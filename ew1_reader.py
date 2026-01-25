@@ -21,6 +21,7 @@ from pymodbus.exceptions import ModbusException
 @dataclass
 class RegisterDefinition:
     """Definition of a Modbus register to read."""
+
     address: int
     name: str
     description: str
@@ -37,12 +38,24 @@ class RegisterDefinition:
 # ERAB for the specific register map for your installation.
 DEFAULT_REGISTERS = [
     # Common Modbus holding registers to try (adjust based on your setup)
-    RegisterDefinition(0, "temp_1", "Temperature Sensor 1", "input", 1, "int16", 0.1, "°C"),
-    RegisterDefinition(1, "temp_2", "Temperature Sensor 2", "input", 1, "int16", 0.1, "°C"),
-    RegisterDefinition(2, "temp_3", "Temperature Sensor 3", "input", 1, "int16", 0.1, "°C"),
-    RegisterDefinition(3, "temp_4", "Temperature Sensor 4", "input", 1, "int16", 0.1, "°C"),
-    RegisterDefinition(4, "temp_5", "Temperature Sensor 5", "input", 1, "int16", 0.1, "°C"),
-    RegisterDefinition(5, "temp_6", "Temperature Sensor 6", "input", 1, "int16", 0.1, "°C"),
+    RegisterDefinition(
+        0, "temp_1", "Temperature Sensor 1", "input", 1, "int16", 0.1, "°C"
+    ),
+    RegisterDefinition(
+        1, "temp_2", "Temperature Sensor 2", "input", 1, "int16", 0.1, "°C"
+    ),
+    RegisterDefinition(
+        2, "temp_3", "Temperature Sensor 3", "input", 1, "int16", 0.1, "°C"
+    ),
+    RegisterDefinition(
+        3, "temp_4", "Temperature Sensor 4", "input", 1, "int16", 0.1, "°C"
+    ),
+    RegisterDefinition(
+        4, "temp_5", "Temperature Sensor 5", "input", 1, "int16", 0.1, "°C"
+    ),
+    RegisterDefinition(
+        5, "temp_6", "Temperature Sensor 6", "input", 1, "int16", 0.1, "°C"
+    ),
 ]
 
 
@@ -55,7 +68,7 @@ class EW1Reader:
         port: int = 502,
         unit_id: int = 1,
         registers: Optional[list[RegisterDefinition]] = None,
-        timeout: float = 5.0
+        timeout: float = 5.0,
     ):
         """
         Initialize the EW-1 reader.
@@ -77,9 +90,7 @@ class EW1Reader:
     def connect(self) -> bool:
         """Connect to the EW-1."""
         self._client = ModbusTcpClient(
-            host=self.host,
-            port=self.port,
-            timeout=self.timeout
+            host=self.host, port=self.port, timeout=self.timeout
         )
         return self._client.connect()
 
@@ -92,7 +103,9 @@ class EW1Reader:
     def __enter__(self):
         """Context manager entry."""
         if not self.connect():
-            raise ConnectionError(f"Failed to connect to EW-1 at {self.host}:{self.port}")
+            raise ConnectionError(
+                f"Failed to connect to EW-1 at {self.host}:{self.port}"
+            )
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
@@ -171,9 +184,10 @@ class EW1Reader:
             return float(val)
         elif data_type == "float32":
             import struct
+
             # Big-endian float
-            raw_bytes = struct.pack('>HH', registers[0], registers[1])
-            return struct.unpack('>f', raw_bytes)[0]
+            raw_bytes = struct.pack(">HH", registers[0], registers[1])
+            return struct.unpack(">f", raw_bytes)[0]
         else:
             return float(registers[0])
 
@@ -213,7 +227,7 @@ class EW1Reader:
                 "description": reg.description,
                 "address": reg.address,
                 "type": reg.register_type,
-                "unit": reg.unit
+                "unit": reg.unit,
             }
             for reg in self.registers
         ]
@@ -231,21 +245,23 @@ def load_registers_from_config(config_path: str) -> list[RegisterDefinition]:
     """
     import json
 
-    with open(config_path, 'r') as f:
+    with open(config_path, "r") as f:
         config = json.load(f)
 
     registers = []
     for reg_config in config.get("registers", []):
-        registers.append(RegisterDefinition(
-            address=reg_config["address"],
-            name=reg_config["name"],
-            description=reg_config.get("description", ""),
-            register_type=reg_config.get("register_type", "holding"),
-            count=reg_config.get("count", 1),
-            data_type=reg_config.get("data_type", "uint16"),
-            scale=reg_config.get("scale", 1.0),
-            unit=reg_config.get("unit", "")
-        ))
+        registers.append(
+            RegisterDefinition(
+                address=reg_config["address"],
+                name=reg_config["name"],
+                description=reg_config.get("description", ""),
+                register_type=reg_config.get("register_type", "holding"),
+                count=reg_config.get("count", 1),
+                data_type=reg_config.get("data_type", "uint16"),
+                scale=reg_config.get("scale", 1.0),
+                unit=reg_config.get("unit", ""),
+            )
+        )
 
     return registers
 

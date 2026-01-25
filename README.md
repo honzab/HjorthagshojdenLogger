@@ -210,6 +210,13 @@ Writing to Google Sheets... Row 15
 uv sync --group dev
 ```
 
+### Set Up Pre-commit Hooks
+
+```bash
+uv tool install pre-commit
+pre-commit install
+```
+
 ### Running Tests
 
 ```bash

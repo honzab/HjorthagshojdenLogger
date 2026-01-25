@@ -27,7 +27,7 @@ def scan_registers(
     start_address: int = 0,
     end_address: int = 100,
     register_type: str = "holding",
-    timeout: float = 5.0
+    timeout: float = 5.0,
 ) -> list[tuple[int, int]]:
     """
     Scan a range of Modbus registers and return those that respond.
@@ -103,7 +103,7 @@ def interpret_value(value: int, address: int) -> str:
 
     # As percentage
     if 0 <= value <= 1000:
-        interpretations.append(f"pct(÷10): {value/10:.1f}%")
+        interpretations.append(f"pct(÷10): {value / 10:.1f}%")
 
     return " | ".join(interpretations)
 
@@ -118,32 +118,42 @@ Examples:
   %(prog)s 192.168.1.100 --start 0 --end 200
   %(prog)s 192.168.1.100 --type input
   %(prog)s 192.168.1.100 --all-types
-        """
+        """,
     )
     parser.add_argument("host", help="IP address of the EW-1")
-    parser.add_argument("--port", type=int, default=502, help="Modbus TCP port (default: 502)")
-    parser.add_argument("--unit", type=int, default=1, help="Modbus unit/slave ID (default: 1)")
-    parser.add_argument("--start", type=int, default=0, help="Start address (default: 0)")
-    parser.add_argument("--end", type=int, default=100, help="End address (default: 100)")
+    parser.add_argument(
+        "--port", type=int, default=502, help="Modbus TCP port (default: 502)"
+    )
+    parser.add_argument(
+        "--unit", type=int, default=1, help="Modbus unit/slave ID (default: 1)"
+    )
+    parser.add_argument(
+        "--start", type=int, default=0, help="Start address (default: 0)"
+    )
+    parser.add_argument(
+        "--end", type=int, default=100, help="End address (default: 100)"
+    )
     parser.add_argument(
         "--type",
         choices=["holding", "input", "coil", "discrete"],
         default="holding",
-        help="Register type to scan (default: holding)"
+        help="Register type to scan (default: holding)",
     )
     parser.add_argument(
-        "--all-types",
-        action="store_true",
-        help="Scan all register types"
+        "--all-types", action="store_true", help="Scan all register types"
     )
-    parser.add_argument("--timeout", type=float, default=5.0, help="Connection timeout (default: 5.0)")
+    parser.add_argument(
+        "--timeout", type=float, default=5.0, help="Connection timeout (default: 5.0)"
+    )
     parser.add_argument("--output", help="Save results to JSON file")
 
     args = parser.parse_args()
 
     print(f"Connecting to {args.host}:{args.port}...")
 
-    register_types = ["holding", "input", "coil", "discrete"] if args.all_types else [args.type]
+    register_types = (
+        ["holding", "input", "coil", "discrete"] if args.all_types else [args.type]
+    )
     all_results = {}
 
     for reg_type in register_types:
@@ -157,7 +167,7 @@ Examples:
                 start_address=args.start,
                 end_address=args.end,
                 register_type=reg_type,
-                timeout=args.timeout
+                timeout=args.timeout,
             )
 
             all_results[reg_type] = found
@@ -167,9 +177,13 @@ Examples:
                 print("-" * 80)
                 for address, value in found:
                     interp = interpret_value(value, address)
-                    print(f"  [{address:5d}] Raw: {value:5d} (0x{value:04X}) | {interp}")
+                    print(
+                        f"  [{address:5d}] Raw: {value:5d} (0x{value:04X}) | {interp}"
+                    )
             else:
-                print(f"  No {reg_type} registers found in range {args.start}-{args.end}")
+                print(
+                    f"  No {reg_type} registers found in range {args.start}-{args.end}"
+                )
 
         except ConnectionError as e:
             print(f"Connection error: {e}")
@@ -178,6 +192,7 @@ Examples:
     # Save to JSON if requested
     if args.output:
         import json
+
         output_data = {
             "host": args.host,
             "port": args.port,
@@ -186,9 +201,9 @@ Examples:
             "results": {
                 reg_type: [{"address": addr, "value": val} for addr, val in regs]
                 for reg_type, regs in all_results.items()
-            }
+            },
         }
-        with open(args.output, 'w') as f:
+        with open(args.output, "w") as f:
             json.dump(output_data, f, indent=2)
         print(f"\nResults saved to {args.output}")
 
