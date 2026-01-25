@@ -201,3 +201,44 @@ Press Ctrl+C to stop
   temp_extra: 35.00 °C
 Writing to Google Sheets... Row 15
 ```
+
+## Development
+
+### Install Dev Dependencies
+
+```bash
+uv sync --group dev
+```
+
+### Running Tests
+
+```bash
+# Run all tests
+uv run pytest
+
+# Run with verbose output
+uv run pytest -v
+
+# Run specific test file
+uv run pytest tests/test_ew1_reader.py
+
+# Run specific test class or function
+uv run pytest tests/test_ew1_reader.py::TestEW1ReaderConvertRawValue
+uv run pytest -k "test_int16"
+
+# Run with coverage (requires pytest-cov)
+uv run pytest --cov=. --cov-report=term-missing
+```
+
+### Test Structure
+
+```
+tests/
+├── __init__.py
+├── test_ew1_reader.py      # Modbus reader tests
+├── test_write_to_sheets.py # Google Sheets writer tests
+├── test_logger.py          # Main logger tests
+└── test_scan_registers.py  # Register scanner tests
+```
+
+Tests use mocking to avoid requiring actual hardware or API connections.
