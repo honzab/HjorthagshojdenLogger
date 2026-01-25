@@ -1,7 +1,17 @@
 # HjorthagshojdenLogger
 
-Simple Python script that can write values to a spreadsheet.
-Will be paired up with ModBus reader to actually provide some values.
+Logs data from an ERAB EW-1 DUC (Data Collection Unit) to Google Sheets via Modbus TCP.
+
+## Overview
+
+This project reads sensor data from an ERAB EW-1 controller via Modbus TCP and logs it to a Google Spreadsheet for monitoring and analysis.
+
+**Components:**
+- `logger.py` - Main script that reads from EW-1 and writes to Google Sheets
+- `ew1_reader.py` - Modbus TCP client for reading EW-1 registers
+- `scan_registers.py` - Utility to discover available Modbus registers
+- `write_to_sheets.py` - Google Sheets API wrapper
+- `registers.json` - Configuration for EW-1 connection and register definitions
 
 ## Setup Instructions
 
@@ -35,28 +45,159 @@ uv sync
 3. Add the service account email (found in the JSON file as `client_email`)
 4. Give it "Editor" permissions
 
-### 4. Configure the Script
+### 4. Configure the EW-1 Connection
 
-Edit `write_to_sheets.py` and update:
-- `SPREADSHEET_URL`: Your Google Sheets URL
-- `SERVICE_ACCOUNT_FILE`: Path to your downloaded JSON key file
+#### Step 1: Discover Available Registers
 
-### 5. Run the Script
+First, find out what registers your EW-1 exposes:
 
 ```bash
-uv run write_to_sheets.py
+# Scan holding registers 0-100
+uv run scan_registers.py 192.168.1.100
+
+# Scan input registers
+uv run scan_registers.py 192.168.1.100 --type input
+
+# Scan all register types with wider range
+uv run scan_registers.py 192.168.1.100 --all-types --start 0 --end 200
+
+# Save results to file
+uv run scan_registers.py 192.168.1.100 --all-types --output scan_results.json
 ```
 
-## How It Works
+#### Step 2: Update Configuration
 
-- Connects to Google Sheets using service account authentication
-- Finds the next empty row in column A
-- Writes the current timestamp in format: `YYYY-MM-DD HH:MM:SS`
-- Each run appends a new timestamp below the previous ones
+Edit `registers.json` with your EW-1's IP address and the registers you discovered:
+
+```json
+{
+  "ew1": {
+    "host": "192.168.1.100",
+    "port": 502,
+    "unit_id": 1
+  },
+  "registers": [
+    {
+      "address": 0,
+      "name": "temp_supply",
+      "description": "Supply temperature",
+      "register_type": "input",
+      "data_type": "int16",
+      "scale": 0.1,
+      "unit": "°C"
+    }
+  ]
+}
+```
+
+**Register configuration options:**
+- `address`: Modbus register address
+- `name`: Column name in Google Sheets
+- `description`: Human-readable description
+- `register_type`: `"holding"`, `"input"`, `"coil"`, or `"discrete"`
+- `data_type`: `"uint16"`, `"int16"`, `"uint32"`, `"int32"`, or `"float32"`
+- `scale`: Multiplier for raw value (e.g., 0.1 if raw 235 means 23.5°C)
+- `unit`: Unit of measurement for display
+
+### 5. Test the Connection
+
+```bash
+# Test reading from EW-1 without writing to Sheets
+uv run logger.py --dry-run
+```
+
+### 6. Run the Logger
+
+```bash
+# Run once
+uv run logger.py
+
+# Set up header row first
+uv run logger.py --setup-header
+
+# Run continuously every 5 minutes
+uv run logger.py --interval 300
+
+# Use custom config file
+uv run logger.py --config my_config.json
+```
+
+## Running on Raspberry Pi
+
+### Systemd Service (Recommended)
+
+Create `/etc/systemd/system/ew1-logger.service`:
+
+```ini
+[Unit]
+Description=EW-1 Logger
+After=network.target
+
+[Service]
+Type=simple
+User=pi
+WorkingDirectory=/home/pi/HjorthagshojdenLogger
+ExecStart=/home/pi/.local/bin/uv run logger.py --interval 300
+Restart=always
+RestartSec=30
+
+[Install]
+WantedBy=multi-user.target
+```
+
+Enable and start:
+```bash
+sudo systemctl enable ew1-logger
+sudo systemctl start ew1-logger
+sudo systemctl status ew1-logger
+```
+
+### Cron Job (Alternative)
+
+```bash
+# Edit crontab
+crontab -e
+
+# Add line to run every 5 minutes
+*/5 * * * * cd /home/pi/HjorthagshojdenLogger && /home/pi/.local/bin/uv run logger.py >> /var/log/ew1-logger.log 2>&1
+```
+
+## Troubleshooting
+
+### Cannot connect to EW-1
+- Verify the IP address is correct
+- Ensure the Raspberry Pi is on the same network
+- Check if Modbus TCP is enabled on the EW-1 (port 502)
+- Try: `nc -zv 192.168.1.100 502`
+
+### No registers found
+- The EW-1 may use different register addresses based on configuration
+- Try scanning different address ranges: `--start 0 --end 500`
+- Check the EW-1 web interface for Modbus configuration
+- Contact ERAB for the register documentation for your setup
+
+### Google Sheets authentication error
+- Verify the service account JSON file exists
+- Ensure the spreadsheet is shared with the service account email
+- Check that the Google Sheets API is enabled
 
 ## Example Output
 
 ```
-✓ Successfully wrote timestamp to cell A5: 2026-01-23 14:30:45
-  Spreadsheet: My Spreadsheet
+$ uv run logger.py --interval 300
+Loading configuration from registers.json...
+EW-1 address: 192.168.1.100:502
+Connecting to Google Sheets...
+
+Starting continuous logging (interval: 300s)
+Press Ctrl+C to stop
+
+[2026-01-25 10:30:00] Reading from EW-1... Got 6/6 values
+  temp_supply: 45.20 °C
+  temp_return: 38.50 °C
+  temp_outdoor: -2.30 °C
+  temp_indoor: 21.40 °C
+  temp_hotwater: 52.10 °C
+  temp_extra: 35.00 °C
+Writing to Google Sheets... Row 15
 ```

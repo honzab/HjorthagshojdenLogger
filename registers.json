@@ -1,0 +1,64 @@
+{
+  "ew1": {
+    "host": "192.168.1.100",
+    "port": 502,
+    "unit_id": 1
+  },
+  "registers": [
+    {
+      "address": 0,
+      "name": "temp_supply",
+      "description": "Supply temperature",
+      "register_type": "input",
+      "data_type": "int16",
+      "scale": 0.1,
+      "unit": "°C"
+    },
+    {
+      "address": 1,
+      "name": "temp_return",
+      "description": "Return temperature",
+      "register_type": "input",
+      "data_type": "int16",
+      "scale": 0.1,
+      "unit": "°C"
+    },
+    {
+      "address": 2,
+      "name": "temp_outdoor",
+      "description": "Outdoor temperature",
+      "register_type": "input",
+      "data_type": "int16",
+      "scale": 0.1,
+      "unit": "°C"
+    },
+    {
+      "address": 3,
+      "name": "temp_indoor",
+      "description": "Indoor temperature",
+      "register_type": "input",
+      "data_type": "int16",
+      "scale": 0.1,
+      "unit": "°C"
+    },
+    {
+      "address": 4,
+      "name": "temp_hotwater",
+      "description": "Hot water temperature",
+      "register_type": "input",
+      "data_type": "int16",
+      "scale": 0.1,
+      "unit": "°C"
+    },
+    {
+      "address": 5,
+      "name": "temp_extra",
+      "description": "Extra temperature sensor",
+      "register_type": "input",
+      "data_type": "int16",
+      "scale": 0.1,
+      "unit": "°C"
+    }
+  ],
+  "_comment": "NOTE: These register addresses are examples. Run scan_registers.py to discover the actual registers on your EW-1, then update this file accordingly."
+}
