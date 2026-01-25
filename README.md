@@ -1,6 +1,6 @@
 # HjorthagshojdenLogger
 
-Logs data from an ERAB EW-1 DUC (Data Collection Unit) to Google Sheets via Modbus TCP.
+Logs data from an ERAB EW-1 DUC (digitaliserad undercentral in Swedish) to Google Sheets via Modbus TCP.
 
 ## Overview
 
